@@ -7,11 +7,14 @@ import UserCard from "@/components/UserCard";
 import { UserCardProps } from "@/libs/types";
 
 export default function RandomUserPage() {
-  // annotate type for users state variable
-  const [users, setUsers] = useState<UserCardProps[]>([]);
+  const [users, setUsers] = useState([]);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [genAmount, setGenAmount] = useState<number>(typeof window !== "undefined" ? Number(localStorage.getItem("genAmount")) : 1)
+  const [genAmount, setGenAmount] = useState(1);
+
+  useEffect(() => {
+      setGenAmount(Number(localStorage.getItem('genAmount')));
+  },[])
 
   const generateBtnOnClick = async () => {
     setIsLoading(true);
@@ -20,19 +23,8 @@ export default function RandomUserPage() {
     );
     setIsLoading(false);
     const users = resp.data.results;
-
-    //Your code here
-    //Process result from api response with map function. Tips use function from /src/libs/cleanUser
-    //Then update state with function : setUsers(...)
-    const cleanedUsers = users.map(cleanUser);
-    setUsers(cleanedUsers);
+    setUsers(users.map((user:any) => cleanUser(user)))
   };
-  
-  useEffect(() => {
-    const jsonAmount = JSON.stringify(genAmount);
-    localStorage.setItem("genAmount", jsonAmount);
-  }, [genAmount]);
-
 
   return (
     <div style={{ maxWidth: "700px" }} className="mx-auto">
@@ -43,20 +35,19 @@ export default function RandomUserPage() {
           className="form-control text-center"
           style={{ maxWidth: "100px" }}
           type="number"
-          onChange={(e) => setGenAmount(e.target.valueAsNumber)}
+          onChange={(e) => 
+            {setGenAmount((Number)(e.target.value)) 
+            localStorage.setItem("genAmount", e.target.value)}}
           value={genAmount}
         />
-
         <button className="btn btn-dark" onClick={generateBtnOnClick}>
           Generate
         </button>
-
       </div>
       {isLoading && (
         <p className="display-6 text-center fst-italic my-4">Loading ...</p>
       )}
-      {users && !isLoading && users.map((user: UserCardProps) => <UserCard name={user.name} imgUrl={user.imgUrl} address={user.address} email={user.email} key={user.email} />)}
+      {users && !isLoading && users.map((x:UserCardProps) => <UserCard{...x} key={x.email}/>)}
     </div>
-    
   );
 }
